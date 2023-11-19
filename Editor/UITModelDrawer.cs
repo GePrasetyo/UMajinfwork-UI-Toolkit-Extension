@@ -34,7 +34,7 @@ namespace Majingari.UI {
                 fieldRect.y += fieldRect.height + EditorGUIUtility.standardVerticalSpacing;
 
                 if (elementNames.Count == 0) {
-                    EditorGUI.LabelField(fieldRect, $"{fieldsInstance[x].Name} (not found)");
+                    EditorGUI.LabelField(fieldRect, $"{fieldsInstance[x].Name} (element not found in the UI Document)");
                     continue;
                 }
 
@@ -109,7 +109,7 @@ namespace Majingari.UI {
                 }
 
                 if (root.ElementAt(x).contentContainer.GetType().IsSubclassOf(typeof(BindableElement))) {
-                    listItems.Add(root.ElementAt(x).contentContainer.name);
+                    listItems.Add(root.ElementAt(x).contentContainer.name != ""? root.ElementAt(x).contentContainer.name: $"{root.ElementAt(x).contentContainer.GetType().Name} (no name)");
                 }
             }
         }
