@@ -1,16 +1,16 @@
 {
   "name": "com.majingari.ui",
-  "displayName": "Majingari UI",
+  "displayName": "Majinfwork UI",
   "version": "0.0.1-preview",
   "description": "Majingari UI Framework.",
   "unity": "2022.3",
   "unityRelease": "10f1",
-  "documentationUrl": "https://github.com/GePrasetyo/Unity-UI-framework/wiki",
-  "changelogUrl": "https://github.com/GePrasetyo/Unity-UI-framework/",
-  "licensesUrl": "https://github.com/GePrasetyo/Unity-UI-framework/blob/main/LICENSE",
+  "documentationUrl": "https://github.com/GePrasetyo/UMajinfwork-UI-Toolkit-Extension/wiki",
+  "changelogUrl": "https://github.com/GePrasetyo/UMajinfwork-UI-Toolkit-Extension/",
+  "licensesUrl": "https://github.com/GePrasetyo/UMajinfwork-UI-Toolkit-Extension/blob/main/LICENSE",
   "author": {
     "name": "Dhimas Prasetyo",
     "email": "dhimasgppantoja@gmail.com",
-    "url": "https://github.com/GePrasetyo/Unity-UI-framework/"
+    "url": "https://github.com/GePrasetyo/UMajinfwork-UI-Toolkit-Extension/"
   }
 }
