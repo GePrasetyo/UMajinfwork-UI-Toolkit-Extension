@@ -1,7 +1,7 @@
 # 📱 Majingari UI Toolkit Extension
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Unity-2022.3%2B-black?style=flat-square&logo=unity" alt="Unity 2022.3+"/>
+  <img src="https://img.shields.io/badge/Unity-6.3%2B-black?style=flat-square&logo=unity" alt="Unity 6.3+"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License"/>
   <img src="https://img.shields.io/badge/Version-0.0.1--preview-blue?style=flat-square" alt="Version"/>
 </p>
@@ -128,7 +128,7 @@ void OnDisable() {
 
 ## ⚙️ Requirements
 
-- Unity 2022.3 or later
+- Unity 6.3 or later
 - UI Toolkit (com.unity.modules.uielements)
 
 ## 📜 License
