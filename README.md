@@ -1,4 +1,4 @@
-# UI Toolkit Extension
+# 📱 Majingari UI Toolkit Extension
 
 <p align="center">
   <img src="https://img.shields.io/badge/Unity-2022.3%2B-black?style=flat-square&logo=unity" alt="Unity 2022.3+"/>
@@ -13,7 +13,7 @@
 
 ---
 
-## Features
+## 🛠️ Features
 
 - **Type-Safe References** - Each element type has its own reference class (`ButtonRef`, `LabelRef`, etc.)
 - **Filtered Dropdowns** - Inspector shows only elements matching the target type
@@ -21,7 +21,7 @@
 - **Convenience Methods** - Common operations like `OnClick()`, `OnValueChanged()` built-in
 - **Zero Boilerplate** - No manual `Q()` calls or string constants needed
 
-## Quick Start
+## 🚀 Getting Started
 
 ### 1. Add fields to your MonoBehaviour
 
@@ -66,7 +66,7 @@ void OnDisable() {
 }
 ```
 
-## Available Reference Types
+## 📖 Available Reference Types
 
 | Class | UI Element | Key Properties/Methods |
 |-------|------------|----------------------|
@@ -81,7 +81,7 @@ void OnDisable() {
 | `FoldoutRef` | `Foldout` | `Value`, `Text` |
 | `VisualElementRef` | `VisualElement` | `Show()`, `Hide()`, `Visible`, `AddClass()`, `RemoveClass()` |
 
-## Direct Element Access
+## 🔗 Direct Element Access
 
 For advanced use cases, access the underlying element directly:
 
@@ -94,7 +94,7 @@ volumeSlider.Slider.RegisterValueChangedCallback(evt => OnVolumeA(evt.newValue))
 volumeSlider.Slider.RegisterValueChangedCallback(evt => OnVolumeB(evt.newValue));
 ```
 
-## Callback Behavior
+## 🔗 Callback Behavior
 
 The convenience `OnValueChanged()` methods support **one callback** at a time:
 
@@ -106,7 +106,7 @@ slider.RemoveOnValueChanged();          // Unregisters callback
 
 For multiple callbacks, use `Element` directly with `RegisterValueChangedCallback()`.
 
-## UIDocument Lifecycle
+## 📦 UIDocument Lifecycle
 
 References automatically handle UIDocument disable/enable cycles:
 
@@ -126,12 +126,12 @@ void OnDisable() {
 }
 ```
 
-## Requirements
+## ⚙️ Requirements
 
 - Unity 2022.3 or later
 - UI Toolkit (com.unity.modules.uielements)
 
-## License
+## 📜 License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
