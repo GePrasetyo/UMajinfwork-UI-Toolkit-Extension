@@ -43,8 +43,6 @@ public class GameHUD : MonoBehaviour {
 - Drag your `UIDocument` to the document field
 - Select the element from the filtered dropdown
 
-![Inspector Preview](https://via.placeholder.com/400x150?text=Inspector+Preview)
-
 ### 3. Use at runtime
 
 ```csharp
