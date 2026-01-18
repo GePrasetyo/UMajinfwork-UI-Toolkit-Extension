@@ -1,4 +1,4 @@
-# Majingari UI
+# UI Toolkit Extension
 
 <p align="center">
   <img src="https://img.shields.io/badge/Unity-2022.3%2B-black?style=flat-square&logo=unity" alt="Unity 2022.3+"/>
