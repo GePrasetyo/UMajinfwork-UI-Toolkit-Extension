@@ -17,6 +17,8 @@
 
 - **Type-Safe References** - Each element type has its own reference class (`ButtonRef`, `LabelRef`, etc.)
 - **Filtered Dropdowns** - Inspector shows only elements matching the target type
+- **Two Reference Modes** - Use external UIDocument or auto-find on same GameObject
+- **Code Binding API** - Assign elements via code when Inspector isn't desired
 - **Auto Cache Management** - Handles UIDocument disable/enable cycles automatically
 - **Convenience Methods** - Common operations like `OnClick()`, `OnValueChanged()` built-in
 - **Zero Boilerplate** - No manual `Q()` calls or string constants needed
@@ -40,8 +42,20 @@ public class GameHUD : MonoBehaviour {
 
 ### 2. Assign in Inspector
 
-- Drag your `UIDocument` to the document field
+Each ref field shows a small icon button to toggle between two modes:
+
+| Icon | Mode | Description |
+|------|------|-------------|
+| 🔗 Link | **UseReference** | Manually assign any UIDocument + select element |
+| 📍 Unlink | **UseDocumentHere** | Auto-uses UIDocument on same GameObject |
+
+**UseReference mode:**
+- Drag any `UIDocument` to the document field
 - Select the element from the filtered dropdown
+
+**UseDocumentHere mode:**
+- Just select the element - UIDocument is found automatically
+- Shows red error if no UIDocument exists on the GameObject
 
 ### 3. Use at runtime
 
@@ -63,6 +77,92 @@ void OnDisable() {
     // Cleanup (optional but recommended)
     playButton.RemoveOnClick(StartGame);
     volumeSlider.RemoveOnValueChanged();
+}
+```
+
+## 💻 Assign in Code
+
+For developers who prefer code over Inspector, use the `Bind` API:
+
+### Bind with UIDocument
+
+```csharp
+[SerializeField] private UIDocument document;
+private LabelRef scoreLabel = new();
+private ButtonRef playButton = new();
+
+void Awake() {
+    // Bind to document - element will be queried on first access
+    scoreLabel.Bind(document, "score-label");
+    playButton.Bind(document, "play-button");
+}
+
+void Start() {
+    scoreLabel.Text = "Score: 0";
+    playButton.OnClick(StartGame);
+}
+```
+
+### Bind with Root Element
+
+```csharp
+void OnEnable() {
+    var root = document.rootVisualElement;
+
+    // Bind and query from root element directly
+    scoreLabel.Bind(root, "score-label");
+    playButton.Bind(root, "play-button");
+}
+```
+
+### Bind Direct Element
+
+```csharp
+void OnEnable() {
+    var root = document.rootVisualElement;
+
+    // Query manually and bind the result directly
+    var label = root.Q<Label>("score-label");
+    var button = root.Q<Button>("play-button");
+
+    scoreLabel.BindDirect(label);
+    playButton.BindDirect(button);
+}
+```
+
+### Comparison with Standard UI Toolkit
+
+```csharp
+// Standard UI Toolkit approach
+private Label _scoreLabel;
+private Button _playButton;
+
+void OnEnable() {
+    var root = document.rootVisualElement;
+    _scoreLabel = root.Q<Label>("score-label");
+    _playButton = root.Q<Button>("play-button");
+    _scoreLabel.text = "Score: 0";
+}
+
+// Majinfwork.UI approach (Inspector)
+[SerializeField] private LabelRef scoreLabel;  // Assign in Inspector
+[SerializeField] private ButtonRef playButton;
+
+void Start() {
+    scoreLabel.Text = "Score: 0";  // Just use it
+}
+
+// Majinfwork.UI approach (Code)
+private LabelRef scoreLabel = new();
+private ButtonRef playButton = new();
+
+void Awake() {
+    scoreLabel.Bind(document, "score-label");
+    playButton.Bind(document, "play-button");
+}
+
+void Start() {
+    scoreLabel.Text = "Score: 0";
 }
 ```
 
