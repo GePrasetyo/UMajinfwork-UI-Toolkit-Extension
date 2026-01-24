@@ -1,4 +1,4 @@
-# 📱 Majingari UI Toolkit Extension
+# 📱 Majinfwork - Unity UI Toolkit Extension
 
 <p align="center">
   <img src="https://img.shields.io/badge/Unity-6.3%2B-black?style=flat-square&logo=unity" alt="Unity 6.3+"/>
