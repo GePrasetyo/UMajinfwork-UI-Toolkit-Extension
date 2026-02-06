@@ -7,20 +7,42 @@ using UnityEngine.UIElements;
 namespace Majinfwork.UI {
     /// <summary>
     /// Custom property drawer for all UITElementRef types.
-    /// Supports two modes :
+    /// Supports two modes:
     /// - UseReference: Shows UIDocument field + element dropdown (manual assignment)
     /// - UseDocumentHere: Shows only element dropdown (auto-finds UIDocument on same GameObject)
+    /// When Unity Localization is installed, also shows localization toggle and LocalizedString field.
     /// </summary>
     [CustomPropertyDrawer(typeof(UITElementRef), true)]
     public class UITElementRefDrawer : PropertyDrawer {
         private const float Spacing = 2f;
         private const float ModeButtonWidth = 20f;
+        private const float LocalizeToggleWidth = 20f;
 
         private static GUIContent refModeIcon;
         private static GUIContent hereModeIcon;
 
         private static GUIContent RefModeIcon => refModeIcon ??= EditorGUIUtility.IconContent("d_Linked");
         private static GUIContent HereModeIcon => hereModeIcon ??= EditorGUIUtility.IconContent("d_Unlinked");
+
+#if HAS_UNITY_LOCALIZATION
+        private static GUIContent localizeIcon;
+
+        private static GUIContent LocalizeIcon {
+            get {
+                if (localizeIcon == null) {
+                    // Try Unity Localization package icon first, fallback to text
+                    localizeIcon = EditorGUIUtility.IconContent("Localization Icon");
+                    if (localizeIcon == null || localizeIcon.image == null) {
+                        localizeIcon = EditorGUIUtility.IconContent("d_Preset.Context");
+                    }
+                    if (localizeIcon == null || localizeIcon.image == null) {
+                        localizeIcon = new GUIContent("L");
+                    }
+                }
+                return localizeIcon;
+            }
+        }
+#endif
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);
@@ -60,9 +82,44 @@ namespace Majinfwork.UI {
                 property.serializedObject.ApplyModifiedProperties();
             }
 
+            float buttonsWidth = ModeButtonWidth;
+
+#if HAS_UNITY_LOCALIZATION
+            // Localization toggle button (next to mode button)
+            var useLocalizationProp = property.FindPropertyRelative("useLocalization");
+            bool hasLocalization = useLocalizationProp != null;
+            bool useLocalization = hasLocalization && useLocalizationProp.boolValue;
+
+            if (hasLocalization) {
+                Rect localizeButtonRect = new Rect(contentX + ModeButtonWidth + Spacing, position.y, LocalizeToggleWidth, lineHeight);
+                buttonsWidth += LocalizeToggleWidth + Spacing;
+
+                var localizeTooltip = useLocalization
+                    ? "Localization enabled.\nClick to disable."
+                    : "Localization disabled.\nClick to enable for dynamic text with arguments.";
+
+                var prevColor = GUI.backgroundColor;
+                if (useLocalization) {
+                    GUI.backgroundColor = new Color(0.5f, 0.8f, 1f);
+                }
+
+                var icon = LocalizeIcon;
+                var buttonContent = icon.image != null
+                    ? new GUIContent(icon.image, localizeTooltip)
+                    : new GUIContent("L", localizeTooltip);
+
+                if (GUI.Button(localizeButtonRect, buttonContent, EditorStyles.iconButton)) {
+                    useLocalizationProp.boolValue = !useLocalizationProp.boolValue;
+                    property.serializedObject.ApplyModifiedProperties();
+                }
+
+                GUI.backgroundColor = prevColor;
+            }
+#endif
+
             // Remaining content area
-            float remainingX = contentX + ModeButtonWidth + Spacing;
-            float remainingWidth = contentWidth - ModeButtonWidth - Spacing;
+            float remainingX = contentX + buttonsWidth + Spacing;
+            float remainingWidth = contentWidth - buttonsWidth - Spacing;
 
             // Get target type
             Type targetType = GetTargetElementType(fieldInfo.FieldType);
@@ -102,8 +159,32 @@ namespace Majinfwork.UI {
                 }
             }
 
+#if HAS_UNITY_LOCALIZATION
+            // Draw LocalizedString field on second line only when enabled
+            if (hasLocalization && useLocalization) {
+                DrawLocalizedStringField(position, property, lineHeight, contentX, contentWidth);
+            }
+#endif
+
             EditorGUI.EndProperty();
         }
+
+#if HAS_UNITY_LOCALIZATION
+        private void DrawLocalizedStringField(Rect position, SerializedProperty property, float lineHeight, float contentX, float contentWidth) {
+            float y = position.y + lineHeight + Spacing;
+
+            // Try to find the localized string property (different names for different refs)
+            var localizedStringProp = property.FindPropertyRelative("localizedString")
+                ?? property.FindPropertyRelative("localizedPlaceholder")
+                ?? property.FindPropertyRelative("localizedChoices");
+
+            if (localizedStringProp != null) {
+                float propHeight = EditorGUI.GetPropertyHeight(localizedStringProp, true);
+                Rect fieldRect = new Rect(contentX, y, contentWidth, propHeight);
+                EditorGUI.PropertyField(fieldRect, localizedStringProp, GUIContent.none, true);
+            }
+        }
+#endif
 
         private UIDocument AutoPopulateDocument(SerializedObject serializedObject, SerializedProperty documentProp) {
             var targetObject = serializedObject.targetObject as Component;
@@ -165,7 +246,24 @@ namespace Majinfwork.UI {
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
-            return EditorGUIUtility.singleLineHeight;
+            float height = EditorGUIUtility.singleLineHeight;
+
+#if HAS_UNITY_LOCALIZATION
+            // Add height for LocalizedString field only when localization is enabled
+            var useLocalizationProp = property.FindPropertyRelative("useLocalization");
+            if (useLocalizationProp != null && useLocalizationProp.boolValue) {
+                // Find the localized string property and get its actual height (handles foldout)
+                var localizedStringProp = property.FindPropertyRelative("localizedString")
+                    ?? property.FindPropertyRelative("localizedPlaceholder")
+                    ?? property.FindPropertyRelative("localizedChoices");
+
+                if (localizedStringProp != null) {
+                    height += Spacing + EditorGUI.GetPropertyHeight(localizedStringProp, true);
+                }
+            }
+#endif
+
+            return height;
         }
 
         private Type GetTargetElementType(Type refType) {

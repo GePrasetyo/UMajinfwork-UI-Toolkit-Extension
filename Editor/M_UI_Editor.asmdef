@@ -2,7 +2,8 @@
     "name": "M_UI_Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:75bd10d6a0d55ef46956c8f7ce7ed0b6"
+        "GUID:75bd10d6a0d55ef46956c8f7ce7ed0b6",
+        "Unity.Localization"
     ],
     "includePlatforms": [
         "Editor"
@@ -13,6 +14,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.localization",
+            "expression": "",
+            "define": "HAS_UNITY_LOCALIZATION"
+        }
+    ],
     "noEngineReferences": false
 }

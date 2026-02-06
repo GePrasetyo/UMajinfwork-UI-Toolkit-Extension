@@ -226,10 +226,79 @@ void OnDisable() {
 }
 ```
 
+## 🌍 Localization Support
+
+When the **Unity Localization** package (`com.unity.localization`) is installed, additional localization features become available.
+
+### Static vs Dynamic Localization
+
+| Text Type | Recommended Approach |
+|-----------|---------------------|
+| **Static text** | Use UXML binding: `text="@TableName/Key"` (most performant) |
+| **Dynamic text** | Use Ref localization with `Arguments` |
+
+> **Why not static text in Refs?** UXML `@Table/Key` binding is handled natively by Unity at the UI Toolkit level with zero C# overhead. Using Refs for static text would add unnecessary event subscriptions.
+
+### Dynamic Localization Usage
+
+For text with runtime values (e.g., "Score: 1500"):
+
+```csharp
+public class GameHUD : MonoBehaviour {
+    // In Inspector: Enable "Use Localization" toggle, set Table/Key to "UI/ScoreFormat"
+    // String Table entry: "Score: {0}"
+    [SerializeField] private LabelRef scoreLabel;
+
+    void OnEnable() {
+        scoreLabel.InitializeLocalization();
+    }
+
+    void OnDisable() {
+        scoreLabel.DisposeLocalization();
+    }
+
+    void UpdateScore(int score) {
+        scoreLabel.Arguments = new object[] { score };  // Updates to "Score: 1500"
+    }
+}
+```
+
+### Localized Dropdowns
+
+For dropdowns with localized choices:
+
+```csharp
+// In Inspector: Enable "Use Localization", add LocalizedString entries for each choice
+[SerializeField] private DropdownFieldRef languageDropdown;
+
+void OnEnable() {
+    languageDropdown.InitializeLocalization();
+    languageDropdown.OnValueChanged(OnLanguageSelected);
+}
+```
+
+### Available Localization
+
+| Ref | Localizable Property |
+|-----|---------------------|
+| `LabelRef` | Text |
+| `ButtonRef` | Text |
+| `TextFieldRef` | Placeholder |
+| `ToggleRef` | Text |
+| `FoldoutRef` | Text |
+| `DropdownFieldRef` | Choices (list) |
+
+### Inspector
+
+When localization is enabled, the Inspector shows:
+- `Use Localization` toggle
+- `LocalizedString` field (Table + Key picker)
+
 ## ⚙️ Requirements
 
 - Unity 6.3 or later
 - UI Toolkit (com.unity.modules.uielements)
+- **Optional:** Unity Localization (`com.unity.localization`) for localization features
 
 ## 📜 License
 
