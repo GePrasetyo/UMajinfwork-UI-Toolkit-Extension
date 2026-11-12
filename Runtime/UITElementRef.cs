@@ -14,6 +14,7 @@ namespace Majinfwork.UI {
     /// - UseReference: Manually assign UIDocument from any GameObject
     /// - UseDocumentHere: Auto-assign UIDocument from the same GameObject (set by editor)
     /// Can also be configured via code using Bind() methods.
+    /// A ref declared in a <see cref="TemplateRefs"/> points into its template instead: read it per instance with In().
     /// </summary>
     [Serializable]
     public abstract class UITElementRef {
@@ -114,6 +115,14 @@ namespace Majinfwork.UI {
         }
 
         public T Resolve() => Element;
+
+        /// <summary>
+        /// This ref's element inside <paramref name="instance"/>: one instance of the template the ref points into (a row
+        /// made from it, or an &lt;Instance&gt; of it in a document; see <see cref="TemplateRefs"/>). Null when there is none.
+        /// </summary>
+        public T In(VisualElement instance) {
+            return instance == null || string.IsNullOrEmpty(elementName) ? null : instance.Q<T>(elementName);
+        }
 
         /// <summary>
         /// Binds this ref to query from a root element directly. Type-safe version.

@@ -10,6 +10,8 @@ namespace Majinfwork.UI {
     /// Supports two modes:
     /// - UseReference: Shows UIDocument field + element dropdown (manual assignment)
     /// - UseDocumentHere: Shows only element dropdown (auto-finds UIDocument on same GameObject)
+    /// A document without a live tree (outside Play, prefab not open) lists its source UXML's elements.
+    /// A ref declared in a TemplateRefs shows only the dropdown, listing the elements of that TemplateRefs' template.
     /// When Unity Localization is installed, also shows localization toggle and LocalizedString field.
     /// </summary>
     [CustomPropertyDrawer(typeof(UITElementRef), true)]
@@ -17,6 +19,9 @@ namespace Majinfwork.UI {
         private const float Spacing = 2f;
         private const float ModeButtonWidth = 20f;
         private const float LocalizeToggleWidth = 20f;
+
+        /// <summary>Instances of templates and documents' source assets, to list their elements from.</summary>
+        private static readonly Dictionary<VisualTreeAsset, (int hash, VisualElement tree)> templateTrees = new Dictionary<VisualTreeAsset, (int, VisualElement)>();
 
         private static GUIContent refModeIcon;
         private static GUIContent hereModeIcon;
@@ -61,6 +66,16 @@ namespace Majinfwork.UI {
             // Content area (after label)
             float contentX = position.x + EditorGUIUtility.labelWidth;
             float contentWidth = position.width - EditorGUIUtility.labelWidth;
+
+            // A ref inside a TemplateRefs points into its template: no document, only the template's elements.
+            SerializedProperty templateProp = FindTemplate(property);
+            if (templateProp != null) {
+                Rect templateDropdownRect = new Rect(contentX, position.y, contentWidth, lineHeight);
+                var template = templateProp.objectReferenceValue as VisualTreeAsset;
+                DrawElementDropdown(templateDropdownRect, elementNameProp, template != null ? TreeOf(template) : null, GetTargetElementType(fieldInfo.FieldType), "(assign the template)");
+                EditorGUI.EndProperty();
+                return;
+            }
 
             // Mode toggle button (small icon button on the left)
             Rect modeButtonRect = new Rect(contentX, position.y, ModeButtonWidth, lineHeight);
@@ -133,7 +148,7 @@ namespace Majinfwork.UI {
                 EditorGUI.PropertyField(documentRect, documentProp, GUIContent.none);
                 var doc = documentProp.objectReferenceValue as UIDocument;
 
-                DrawElementDropdown(dropdownRect, elementNameProp, doc, targetType);
+                DrawElementDropdown(dropdownRect, elementNameProp, TreeOf(doc), targetType, "(assign UIDocument)");
             }
             else {
                 // UseDocumentHere - auto-populate if needed, show only dropdown
@@ -155,7 +170,7 @@ namespace Majinfwork.UI {
                     GUI.backgroundColor = prevColor;
                 }
                 else {
-                    DrawElementDropdown(dropdownRect, elementNameProp, doc, targetType);
+                    DrawElementDropdown(dropdownRect, elementNameProp, TreeOf(doc), targetType, "(assign UIDocument)");
                 }
             }
 
@@ -198,21 +213,55 @@ namespace Majinfwork.UI {
             return doc;
         }
 
-        private void DrawElementDropdown(Rect rect, SerializedProperty elementNameProp, UIDocument doc, Type targetType) {
-            if (doc == null) {
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUI.Popup(rect, 0, new[] { "(assign UIDocument)" });
-                EditorGUI.EndDisabledGroup();
+        /// <summary>
+        /// The ref's parent's <c>template</c> when the ref is declared in a <see cref="TemplateRefs"/>, else null.
+        /// </summary>
+        private static SerializedProperty FindTemplate(SerializedProperty property) {
+            string path = property.propertyPath;
+            int dot = path.LastIndexOf('.');
+            if (dot < 0) {
+                return null;
             }
-            else if (doc.rootVisualElement == null) {
+
+            SerializedProperty template = property.serializedObject.FindProperty(path.Substring(0, dot) + ".template");
+            return template != null && template.propertyType == SerializedPropertyType.ObjectReference && template.type == "PPtr<$VisualTreeAsset>" ? template : null;
+        }
+
+        /// <summary>
+        /// The document's elements: its live tree while it has one (Play, an open prefab), else its source asset's.
+        /// </summary>
+        private static VisualElement TreeOf(UIDocument doc) {
+            if (doc == null) {
+                return null;
+            }
+
+            if (doc.rootVisualElement != null) {
+                return doc.rootVisualElement;
+            }
+
+            return doc.visualTreeAsset != null ? TreeOf(doc.visualTreeAsset) : null;
+        }
+
+        /// <summary>An instance of <paramref name="asset"/> to list elements from, made again when the asset changes.</summary>
+        private static VisualElement TreeOf(VisualTreeAsset asset) {
+            if (!templateTrees.TryGetValue(asset, out (int hash, VisualElement tree) cached) || cached.hash != asset.contentHash) {
+                cached = (asset.contentHash, asset.Instantiate());
+                templateTrees[asset] = cached;
+            }
+
+            return cached.tree;
+        }
+
+        private void DrawElementDropdown(Rect rect, SerializedProperty elementNameProp, VisualElement tree, Type targetType, string missingText) {
+            if (tree == null) {
                 EditorGUI.BeginDisabledGroup(true);
-                EditorGUI.Popup(rect, 0, new[] { "(open Prefab or enter Play mode)" });
+                EditorGUI.Popup(rect, 0, new[] { missingText });
                 EditorGUI.EndDisabledGroup();
             }
             else {
                 // Get all elements of the target type
                 List<string> elementNames = new List<string> { "(none)" };
-                CollectElementsOfType(doc.rootVisualElement, targetType, elementNames);
+                CollectElementsOfType(tree, targetType, elementNames);
 
                 // Find current selection index
                 string currentName = elementNameProp.stringValue;

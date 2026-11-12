@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Unity-6.3%2B-black?style=flat-square&logo=unity" alt="Unity 6.3+"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License"/>
-  <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-1.1.0-blue?style=flat-square" alt="Version"/>
 </p>
 
 <p align="center">
@@ -18,6 +18,8 @@
 - **Type-Safe References** - Each element type has its own reference class (`ButtonRef`, `LabelRef`, etc.)
 - **Filtered Dropdowns** - Inspector shows only elements matching the target type
 - **Two Reference Modes** - Use external UIDocument or auto-find on same GameObject
+- **Template Refs** - Reference elements inside a UXML template (list rows, items) and read them per instance
+- **Any Element Type** - `ElementRef<T>` for your own controls
 - **Code Binding API** - Assign elements via code when Inspector isn't desired
 - **Auto Cache Management** - Handles UIDocument disable/enable cycles automatically
 - **Convenience Methods** - Common operations like `OnClick()`, `OnValueChanged()` built-in
@@ -56,6 +58,8 @@ Each ref field shows a small icon button to toggle between two modes:
 **UseDocumentHere mode:**
 - Just select the element - UIDocument is found automatically
 - Shows red error if no UIDocument exists on the GameObject
+
+Outside Play mode, with the prefab closed, the dropdown lists the elements of the document's source UXML.
 
 ### 3. Use at runtime
 
@@ -180,6 +184,42 @@ void Start() {
 | `DropdownFieldRef` | `DropdownField` | `Value`, `Index`, `OnValueChanged()`, `SetChoices()` |
 | `FoldoutRef` | `Foldout` | `Value`, `Text` |
 | `VisualElementRef` | `VisualElement` | `Show()`, `Hide()`, `Visible`, `AddClass()`, `RemoveClass()` |
+| `ElementRef<T>` | any `T : VisualElement` | `Element` (typed), for your own controls: `ElementRef<HealthGauge>` |
+
+## 🧩 Template Refs (rows and list items)
+
+UI made from a UXML template at runtime (a list's rows) has no single element in the document to point at: every row is a new copy. Put the refs in a `TemplateRefs` subclass instead. In the Inspector it shows the template field, and each ref's dropdown lists that template's elements of its type. One set of refs serves every copy: read an element of one copy with `In(row)`.
+
+```csharp
+using System;
+using Majinfwork.UI;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+public class Scoreboard : MonoBehaviour {
+    [Serializable]
+    private class PlayerRow : TemplateRefs {   // template: PlayerRow.uxml
+        public LabelRef name;
+        public LabelRef score;
+        public ButtonRef kick;
+    }
+
+    [SerializeField] private VisualElementRef list;
+    [SerializeField] private PlayerRow playerRow;
+
+    private void Add(string player, int points) {
+        TemplateContainer row = playerRow.Instantiate();
+        playerRow.name.In(row).text = player;
+        playerRow.score.In(row).text = points.ToString();
+        playerRow.kick.In(row).clicked += () => Kick(player);
+        list.Element.Add(row);
+    }
+
+    private void Kick(string player) { }
+}
+```
+
+The same works for a template placed with `<ui:Instance>` in several documents (a settings panel shared by two screens): give each screen a `VisualElementRef` to its instance and read the template's refs with `In(instance)`.
 
 ## 🔗 Direct Element Access
 
